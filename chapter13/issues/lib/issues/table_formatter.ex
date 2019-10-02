@@ -37,7 +37,7 @@ defmodule Issues.TableFormatter do
     data_by_columns
     |> List.zip
     |> map(&Tuple.to_list/1)
-    |> each(&puts_in_columns(&1, format))
+    |> each(&puts_one_line_in_columns(&1, format))
   end
 
   def puts_one_line_in_columns(fields, format) do
