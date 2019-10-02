@@ -21,6 +21,15 @@ defmodule Issues.TableFormatter do
   def printable(str) when is_binary(str), do: str
   def printable(str), do: to_string(str)
 
+  @doc"""
+    Given a list containing subtitles, where each sublist contains the data for
+    a column, return a list containing the maximum width of each column
+
+    ## Example
+      iex> data = [ [ "cat", "wombat", "elk" ],  [ "mongoose", "wombat", "elk" ] ]
+      iex> Issues.TableFormatter.widths_of(data)
+      [6, 8]
+  """
   def widths_of(columns) do
     for column <- columns, do: column |> map(&String.length/1) |> max
   end
