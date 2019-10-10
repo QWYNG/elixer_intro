@@ -3,7 +3,7 @@ defmodule Ticker do
 	@name :ticker
 	
 	def start do
-		pid = spawn(__MODULE__, :generator, [[]])
+		pid = spawn(__MODULE__, :generator, [[], 0])
 		:global.register_name(@name, pid)
 	end
 	
@@ -11,33 +11,45 @@ defmodule Ticker do
 		send :global.whereis_name(@name), { :register, client_pid }
 	end
 	
-	def generator(clients) do
+	def generator(clients, n) do
 		receive do
 			{ :register, pid } ->
 				IO.puts("registering #{inspect pid}")
-				generator([pid|clients])
-		after
-			@interval ->
-				IO.puts("tick")
-				Enum.each clients, fn client ->
-					send client, { :tick }
-				end
-				generator(clients)
+				generator([pid|clients], n)
+		after @interval ->
+			Enum.reverse(clients)
+			|> Enum.at(n, List.last(clients))
+			|> tick
+			
+			if Enum.count(clients) <= n do
+				generator(clients, 1)
+			else
+				generator(clients, n + 1)
+			end
 		end
+	end
+	
+	def tick(pid) when pid == nil do
+		IO.puts("tick")
+	end
+	
+	def tick(pid) do
+		IO.puts("tick")
+		send(pid, { :tick })
 	end
 end
 
 defmodule Client do
-	def start do
-		pid = spawn(_MODULE_, :receiver, [])
+	def start(n) do
+		pid = spawn(__MODULE__, :receiver, [n])
 		Ticker.register(pid)
 	end
 	
-	def receiver do
+	def receiver(n) do
 		receive do
 			{ :tick } ->
-				IO.puts("tock in client")
-				receiver
+				IO.puts("Gotta tick! #{n}")
+				receiver n
 		end
 	end
 end
